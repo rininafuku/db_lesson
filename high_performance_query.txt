@@ -24,3 +24,57 @@ EXPLAIN
 EXPLAIN ANALYZE
 実際にクエリを実行して、スキャンした行数と実行時間が確認できる
 処理速度を確認してINDEXを貼るか決める。
+
+
+SQLの条件分岐とは？
+UNION ALLとCASEがある。
+UNION ALLはSELECT FROM ~でテーブルを複数回スキャンするためパフォーマンスが悪い。
+なので、SQLで条件分岐したいときはCASE式を使用する。
+
+mysql> SELECT * FROM employees LIMIT 10;
++--------+------------+------------+-----------+--------+------------+
+| emp_no | birth_date | first_name | last_name | gender | hire_date  |
++--------+------------+------------+-----------+--------+------------+
+|  10001 | '1953'-09-02 | Georgi     | Facello   | M      | '1986'-06-26 |
+|  10002 | '1964'-06-02 | Bezalel    | Simmel    | F      | '1985'-11-21 |
+|  10003 | '1959'-12-03 | Parto      | Bamford   | M      | '1986'-08-28 |
+|  10004 | '1954'-05-01 | Chirstian  | Koblick   | M      | '1986'-12-01 |
+|  10005 | '1955'-01-21 | Kyoichi    | Maliniak  | M      | '1989'-09-12 |
+|  10006 | '1953'-04-20 | Anneke     | Preusig   | F      | '1989'-06-02 |
+|  10007 | '1957'-05-23 | Tzvetan    | Zielinski | F      | '1989'-02-10 |
+|  10008 | '1958'-02-'19 |' Saniya     | Kalloufi  | M      | '1994'-09-15 |
+|  10009 | '1952'-04-'19 |' Sumant     | Peac      | F      | '1985'-02-18 |
+|  10010 | '1963'-06-01 | Duangkaew  | Piveteau  | F      | '1989'-08-24 |
++--------+------------+------------+-----------+--------+------------+
+
+'1950'年生まれと'1960'年生まれをすべて抽出して、それぞれの年代毎に値を割り振る
+SELECT emp_no,birth_date,
+    CASE WHEN birth_date LIKE ''195%'' THEN '50s'
+         WHEN birth_date LIKE ''196%'' THEN '60s'
+    END AS birth_age
+FROM employees
+WHERE emp_no BETWEEN '10001' AND '10050'
+ORDER BY birth_date ASC;
+
+N+1問題とは？
+loop処理内で複数回クエリを発行することでパフォーマンスが低下すること。
+クエリを１回発行する毎にクエリの前処理(クエリの伝送、検証、実行計画立案など)や後処理（結果をネットワークに伝送）が行われるためにN+１問題が発生する。
+これを回避するために、データを1回のクエリですべて取得するようにする。
+
+EXPLAIN ANALYZE SELECT *
+FROM employees
+WHERE hire_date = ''1999'-01-01';
+
+SELECT
+    CASE
+        WHEN birth_date BETWEEN '1920-01-01' AND '1929-12-31' THEN '20s'
+        WHEN birth_date BETWEEN '1930-01-01' AND '1939-12-31' THEN '30s'
+        WHEN birth_date BETWEEN '1940-01-01' AND '1949-12-31' THEN '40s'
+        WHEN birth_date BETWEEN '1950-01-01' AND '1959-12-31' THEN '50s'
+        WHEN birth_date BETWEEN '1960-01-01' AND '1969-12-31' THEN '60s'
+        WHEN birth_date BETWEEN '1970-01-01' AND '1979-12-31' THEN '70s'
+        WHEN birth_date BETWEEN '1980-01-01' AND '1989-12-31' THEN '80s'
+        WHEN birth_date BETWEEN '1990-01-01' AND '1999-12-31' THEN '90s'
+    END AS birth_date_age
+
+FROM employees;
