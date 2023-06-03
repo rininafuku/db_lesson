@@ -60,21 +60,3 @@ N+1問題とは？
 loop処理内で複数回クエリを発行することでパフォーマンスが低下すること。
 クエリを１回発行する毎にクエリの前処理(クエリの伝送、検証、実行計画立案など)や後処理（結果をネットワークに伝送）が行われるためにN+１問題が発生する。
 これを回避するために、データを1回のクエリですべて取得するようにする。
-
-EXPLAIN ANALYZE SELECT *
-FROM employees
-WHERE hire_date = ''1999'-01-01';
-
-SELECT
-    CASE
-        WHEN birth_date BETWEEN '1920-01-01' AND '1929-12-31' THEN '20s'
-        WHEN birth_date BETWEEN '1930-01-01' AND '1939-12-31' THEN '30s'
-        WHEN birth_date BETWEEN '1940-01-01' AND '1949-12-31' THEN '40s'
-        WHEN birth_date BETWEEN '1950-01-01' AND '1959-12-31' THEN '50s'
-        WHEN birth_date BETWEEN '1960-01-01' AND '1969-12-31' THEN '60s'
-        WHEN birth_date BETWEEN '1970-01-01' AND '1979-12-31' THEN '70s'
-        WHEN birth_date BETWEEN '1980-01-01' AND '1989-12-31' THEN '80s'
-        WHEN birth_date BETWEEN '1990-01-01' AND '1999-12-31' THEN '90s'
-    END AS birth_date_age
-
-FROM employees;
