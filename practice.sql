@@ -190,6 +190,7 @@ WHERE
                        AND e1.gender = e2.gender
                    );
 
+-- クエリの流れ
 
 -- 主クエリでemployees(e1)テーブルがスキャンされる。まず最初にemp_noが10001の行がスキャンされることを考えてみる。
 employeesテーブル
@@ -213,3 +214,100 @@ employeesテーブル
 -- これらの行の中で最も新しいbirth_dateは1959-12-03がサブクエリの結果となる
 -- そして、サブクエリの結果birth_date（1959-12-03）が主クエリのWhere句のbirth_date（1953-09-02）と一致するか確認される。一致しなければ、現在のスキャン行は結果に含まれない。
 -- その後、e1の次の行（emp_noが10002の行など）がスキャンされ、上記の手順が再び繰り返されます。このように、主クエリの各行がスキャンされ処理される。
+
+
+-- 退職者も含む全従業員数を求めよう
+SELECT
+  COUNT(*) AS all_employees_numbers
+FROM
+  employees;
+
+-- 現在何らかの部署に配属中の従業員数を求めよう
+SELECT
+  COUNT(*) AS number_of_assigned_emp
+FROM
+  current_dept_emp
+WHERE
+  to_date = '9999-01-01';
+
+-- 現在どの部署にも配属していない（退職中の）従業員数を求めよう
+SELECT
+  COUNT(*) AS number_of_not_assigned_emp
+FROM
+  current_dept_emp
+WHERE
+  to_date <> '9999-01-01';
+
+-- 各従業員の最高給与の上位30位の従業員番号と最高給与金額を求めよう
+SELECT
+  emp_no,MAX(salary) AS highest_salary_of_emp
+FROM
+  salaries
+GROUP BY
+  emp_no
+ORDER BY
+  highest_salary_of_emp DESC
+LIMIT 30;
+
+-- 各従業員の最低給与の下位30位の従業員番号と最低給与金額を求めよう
+SELECT
+  emp_no,MIN(salary) AS lowest_salary_of_emp
+FROM
+  salaries
+GROUP BY
+  emp_no
+ORDER BY
+  lowest_salary_of_emp ASC
+LIMIT 30;
+
+-- 従業員番号10010から10100の従業員で現在役職を保持している従業員の、従業員番号、ファーストネーム、ラストネーム、現在の役職名（title）を求めよう
+SELECT
+  t.emp_no,first_name,last_name,title
+FROM
+  titles AS t INNER JOIN employees AS e
+    ON t.emp_no = e.emp_no
+WHERE
+  t.emp_no BETWEEN '10010' AND '10100'
+  AND to_date = '9999-01-01';
+
+-- 全部署の部署名およびその部署に現在在籍している従業員の最高給与を求めよう
+SELECT
+  d.dept_name,MAX(s.salary)
+FROM
+  current_dept_emp AS cde INNER JOIN departments AS d
+    ON cde.dept_no = d.dept_no INNER JOIN salaries AS s
+      ON cde.emp_no = s.emp_no
+GROUP BY
+  d.dept_name
+;
+
+-- 全部署の部署名およびその部署の現在マネージャーの現在の給与を求めよう
+SELECT
+  d.dept_name,
+  s.salary AS current_manager_current_salary
+FROM
+  dept_manager AS dm
+    INNER JOIN departments AS d
+      ON dm.dept_no = d.dept_no
+    INNER JOIN salaries AS s
+      ON dm.emp_no = s.emp_no
+WHERE
+  dm.to_date = '9999-01-01'
+  AND s.to_date = '9999-01-01'
+;
+
+-- 全部署の部署名およびその部署の現在マネージャーの最高給与を求めよう
+SELECT
+  d.dept_name,
+  MAX(s.salary) AS current_manager_max_salary
+FROM
+  dept_manager AS dm
+    INNER JOIN departments AS d
+      ON dm.dept_no = d.dept_no
+    INNER JOIN salaries AS s
+      ON dm.emp_no = s.emp_no
+WHERE
+  dm.to_date = '9999-01-01'
+GROUP BY
+  d.dept_name
+;
